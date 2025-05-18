@@ -22,11 +22,11 @@
   </head>
   <body class="font-jakarta bg-gray-100">
     <div class="flex flex-col items-center justify-center min-h-screen px-10">
-      <h1 class="text-2xl font-bold my-5">Bypass Pixeldrain link</h1>
+      <h1 class="text-2xl font-bold my-5">Bypass Pixeldrain Link</h1>
 
       <!-- Search Box -->
       <div class="bg-white p-6 rounded shadow-md flex md:flex-row flex-col gap-5 items-center w-full max-w-xl">
-        <input id="linkInput" type="text" placeholder="Paste pixeldrain disini..." class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full" />
+        <input id="linkInput" type="text" placeholder="Paste link disini..." class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full" />
         <button id="bypassBtn" onclick="handleBypass()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition flex items-center justify-center min-w-[120px]">
           <span id="btnText">Bypass</span>
         </button>
@@ -67,7 +67,7 @@
             const suffix = input.replace("https://pixeldrain.com/api/file/", "");
             bypassUrl = `https://pd.cybar.xyz/${suffix}`;
           } else {
-            alert("Invalid PixelDrain link.");
+            alert("Link tidak valid...");
             btnText.textContent = "Bypass";
             return;
           }
