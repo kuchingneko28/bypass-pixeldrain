@@ -36,15 +36,15 @@
       <div id="outputContainer" class="mt-6 w-full max-w-xl hidden">
         <div class="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md text-sm mb-4">✅ Berhasil. Klik download dibawah untuk mendownload file.</div>
 
-        <div class="bg-white border border-gray-200 p-4 rounded-md shadow md:flex md:justify-between md:items-center">
+        <div class="bg-white border border-gray-200 p-4 rounded-md shadow">
           <p id="bypassLink" class="text-gray-700 text-sm break-words mb-5 md:mb-0"></p>
-          <a id="downloadBtn" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition">Download</a>
+          <a id="downloadBtn" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition hidden"></a>
         </div>
       </div>
     </div>
 
     <script>
-      function handleBypass() {
+      async function handleBypass() {
         const input = document.getElementById("linkInput").value.trim();
         const outputContainer = document.getElementById("outputContainer");
         const bypassLinkEl = document.getElementById("bypassLink");
@@ -52,32 +52,61 @@
         const btnText = document.getElementById("btnText");
 
         btnText.textContent = "Loading...";
+        outputContainer.classList.add("hidden");
 
-        setTimeout(() => {
-          const fileRegex = /https:\/\/pixeldrain\.com\/u\/([\w-]+)/;
-          const zipRegex = /https:\/\/pixeldrain\.com\/api\/file\/([\w-]+)\/info\/zip/;
+        try {
+          const response = await fetch("https://pixeldrain-api.vercel.app/url", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: input }),
+          });
 
-          let fileId = null;
-          let bypassUrl = null;
+          if (!response.ok) throw new Error("API error");
 
-          if (fileRegex.test(input)) {
-            fileId = input.match(fileRegex)[1];
-            bypassUrl = `https://pd.cybar.xyz/${fileId}`;
-          } else if (zipRegex.test(input)) {
-            const suffix = input.replace("https://pixeldrain.com/api/file/", "");
-            bypassUrl = `https://pd.cybar.xyz/${suffix}`;
+          const result = await response.json();
+          const viewer = result.viewerData;
+
+          let html = `<div class="bg-white p-4 border border-gray-200 rounded-md shadow space-y-4 w-full">`;
+
+          if (viewer.type === "list") {
+            const files = viewer.api_response.files;
+            const title = viewer.api_response.title;
+            html += `<h2 class="text-lg font-semibold">${title} (${files.length} files)</h2>`;
+
+            files.forEach((file) => {
+              const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+              const link = `https://pd.cybar.xyz/${file.id}`;
+              html += `
+            <div class="border-t pt-3">
+              <p class="text-sm font-medium">${file.name}</p>
+              <p class="text-xs text-gray-500">${sizeMB} MB • ${file.views} views • ${file.downloads} downloads</p>
+              <a href="${link}" target="_blank" class="inline-block mt-2 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition">Download</a>
+            </div>`;
+            });
+          } else if (viewer.type === "file") {
+            const file = viewer.api_response;
+            const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+            const link = `https://pd.cybar.xyz/${file.id}`;
+
+            html += `
+          <h2 class="text-lg font-semibold">Single File</h2>
+          <div class="border-t pt-3">
+            <p class="text-sm font-medium">${file.name}</p>
+            <p class="text-xs text-gray-500">${sizeMB} MB • ${file.views} views • ${file.downloads} downloads</p>
+            <a href="${link}" target="_blank" class="inline-block mt-2 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition">Download</a>
+          </div>`;
           } else {
-            alert("Link tidak valid...");
-            btnText.textContent = "Bypass";
-            return;
+            html += `<p class="text-red-600">Data tidak ditemukan.</p>`;
           }
 
-          bypassLinkEl.textContent = bypassUrl;
-          downloadBtn.href = bypassUrl;
+          html += `</div>`;
+          bypassLinkEl.innerHTML = html;
           outputContainer.classList.remove("hidden");
+        } catch (err) {
+          alert("Gagal mengambil data file.");
+        }
 
-          btnText.textContent = "Bypass";
-        }, 1000);
+        btnText.textContent = "Bypass";
       }
     </script>
   </body>
