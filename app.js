@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-
 const bodyParser = require("body-parser");
 const cheerio = require("cheerio");
 const axios = require("axios");
@@ -10,7 +9,6 @@ const path = require("path");
 
 const app = express();
 const port = 3000;
-
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -19,6 +17,7 @@ const limiter = rateLimit({
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
+app.set("trust proxy", true);
 app.use(cors());
 app.use(bodyParser.json());
 app.use(morgan("combined"));
