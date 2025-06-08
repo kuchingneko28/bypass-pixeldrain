@@ -1,0 +1,7 @@
+# POST
+POST http://localhost:3000/
+Content-Type: application/json
+
+{
+    "url":"https://pixeldrain.com/u/zQqeoTqf"
+}

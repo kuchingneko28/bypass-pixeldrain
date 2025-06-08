@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet" />
+    <title>Bypass pixeldrain link</title>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              jakarta: ['"Plus Jakarta Sans"', "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="font-jakarta bg-gray-100">
+    <div class="flex flex-col items-center justify-center min-h-screen px-10">
+      <h1 class="text-2xl font-bold my-5">Bypass Pixeldrain Link</h1>
+
+      <!-- Search Box -->
+      <div class="bg-white p-6 rounded shadow-md flex md:flex-row flex-col gap-5 items-center w-full max-w-xl">
+        <input id="linkInput" type="text" placeholder="Paste link disini..." class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full" />
+        <button id="bypassBtn" onclick="handleBypass()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition flex items-center justify-center min-w-[120px]">
+          <span id="btnText">Bypass</span>
+        </button>
+      </div>
+
+      <!-- Output -->
+      <div id="outputContainer" class="mt-6 w-full max-w-xl hidden">
+        <div class="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md text-sm mb-4">✅ Berhasil. Klik download dibawah untuk mendownload file.</div>
+
+        <div class="bg-white border border-gray-200 p-4 rounded-md shadow">
+          <p id="bypassLink" class="text-gray-700 text-sm break-words mb-5 md:mb-0"></p>
+          <a id="downloadBtn" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition hidden"></a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function handleBypass() {
+        const input = document.getElementById("linkInput").value.trim();
+        const outputContainer = document.getElementById("outputContainer");
+        const bypassLinkEl = document.getElementById("bypassLink");
+        const downloadBtn = document.getElementById("downloadBtn");
+        const btnText = document.getElementById("btnText");
+
+        btnText.textContent = "Loading...";
+        outputContainer.classList.add("hidden");
+
+        try {
+          const response = await fetch("/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: input }),
+          });
+
+          if (!response.ok) throw new Error("API error");
+
+          const result = await response.json();
+          const viewer = result.viewerData;
+
+          let html = `<div class="bg-white p-4 border border-gray-200 rounded-md shadow space-y-4 w-full">`;
+
+          if (viewer.type === "list") {
+            const files = viewer.api_response.files;
+            const title = viewer.api_response.title;
+            html += `<h2 class="text-lg font-semibold">${title} (${files.length} files)</h2>`;
+
+            files.forEach((file) => {
+              const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+              const link = `https://pd.cybar.xyz/${file.id}`;
+              html += `
+            <div class="border-t pt-3">
+              <p class="text-sm font-medium">${file.name}</p>
+              <p class="text-xs text-gray-500">${sizeMB} MB • ${file.views} views • ${file.downloads} downloads</p>
+              <a href="${link}" target="_blank" class="inline-block mt-2 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition">Download</a>
+            </div>`;
+            });
+          } else if (viewer.type === "file") {
+            const file = viewer.api_response;
+            const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+            const link = `https://pd.cybar.xyz/${file.id}`;
+
+            html += `
+          <h2 class="text-lg font-semibold">Single File</h2>
+          <div class="border-t pt-3">
+            <p class="text-sm font-medium">${file.name}</p>
+            <p class="text-xs text-gray-500">${sizeMB} MB • ${file.views} views • ${file.downloads} downloads</p>
+            <a href="${link}" target="_blank" class="inline-block mt-2 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition">Download</a>
+          </div>`;
+          } else {
+            html += `<p class="text-red-600">Data tidak ditemukan.</p>`;
+          }
+
+          html += `</div>`;
+          bypassLinkEl.innerHTML = html;
+          outputContainer.classList.remove("hidden");
+        } catch (err) {
+          alert("Gagal mengambil data file.");
+        }
+
+        btnText.textContent = "Bypass";
+      }
+    </script>
+  </body>
+</html>
