@@ -76,7 +76,7 @@
               const sizeMB = (file.size / 1024 / 1024).toFixed(2);
               html += `
                 <div class='p-4 bg-white border rounded shadow'>
-                  <p class='font-medium'>${file.name}</p>
+                  <p class='font-medium break-words'>${file.name}</p>
                   <p class='text-xs text-gray-500'>${sizeMB} MB • ${file.views} views • ${file.downloads} downloads</p>
                   <a href="https://pd.cybar.xyz/${file.id}" target="_blank" class="mt-2 inline-block px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Download</a>
                 </div>
@@ -89,7 +89,7 @@
             messageBox.textContent = `\u2705 Success. Single file found.`;
             html += `
               <div class='p-4 bg-white border rounded shadow'>
-                <p class='font-medium'>${file.name}</p>
+                <p class='font-medium break-words'>${file.name}</p>
                 <p class='text-xs text-gray-500'>${sizeMB} MB • ${file.views} views • ${file.downloads} downloads</p>
                 <a href="https://pd.cybar.xyz/${file.id}" target="_blank" class="mt-2 inline-block px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Download</a>
               </div>
