@@ -6,6 +6,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <meta name="description" content="Bypass Pixeldrain restrictions and download files or lists directly. Fast, secure, and ad-free Pixeldrain link bypasser." />
+    <meta name="keywords" content="Pixeldrain, Bypass, Download, Direct Link, File Downloader, Pixeldrain List" />
+    <meta name="author" content="Tuan Kuchiing" />
     <title>Pixeldrain Bypasser</title>
     <script>
       tailwind.config = {
@@ -108,7 +111,7 @@
 
         for (const url of links) {
           try {
-            const response = await fetch("/", {
+            const response = await fetch("/api", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ url }),

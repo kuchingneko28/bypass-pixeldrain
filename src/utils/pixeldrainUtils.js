@@ -14,7 +14,6 @@ function extractViewerData(html) {
       const match = content.match(/window\.viewer_data\s*=\s*(\{[\s\S]*?\});/);
       if (match && match[1]) {
         try {
-          // Sanitize for parsing
           const cleaned = match[1].replace(/;\s*$/, "");
           return JSON.parse(cleaned);
         } catch (err) {

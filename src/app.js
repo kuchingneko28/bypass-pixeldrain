@@ -5,10 +5,11 @@ const bodyParser = require("body-parser");
 const axios = require("axios");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
+const serverless = require("serverless-http");
 const { isValidPixeldrainUrl, extractViewerData } = require("./utils/pixeldrainUtils");
 
 const app = express();
-const port = 3000;
+const router = express.Router();
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -16,19 +17,18 @@ const limiter = rateLimit({
   message: "Too many requests from this IP, please try again later.",
 });
 
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
 app.set("trust proxy", 1);
 app.use(cors());
 app.use(bodyParser.json());
 app.use(morgan("combined"));
 app.use("/", limiter);
+app.use(express.static(path.join(__dirname, "views")));
 
-app.get("/", (req, res) => {
-  res.render("index");
+router.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "index.html"));
 });
 
-app.post("/", async (req, res) => {
+router.post("/", async (req, res) => {
   const { url } = req.body;
 
   if (!url || !isValidPixeldrainUrl(url)) {
@@ -37,7 +37,6 @@ app.post("/", async (req, res) => {
 
   try {
     const { data: html } = await axios.get(url, { timeout: 5000 });
-
     const viewerData = extractViewerData(html);
 
     if (viewerData) {
@@ -51,7 +50,7 @@ app.post("/", async (req, res) => {
   }
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`✅ Server running at http://localhost:${port}`);
-});
+app.use("/api", router);
+
+module.exports = app;
+module.exports.handler = serverless(app);
