@@ -9,7 +9,6 @@ const serverless = require("serverless-http");
 const { isValidPixeldrainUrl, extractViewerData } = require("./utils/pixeldrainUtils");
 
 const app = express();
-const router = express.Router();
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -24,11 +23,11 @@ app.use(morgan("combined"));
 app.use("/", limiter);
 app.use(express.static(path.join(__dirname, "views")));
 
-router.get("/", (req, res) => {
+app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "index.html"));
 });
 
-router.post("/", async (req, res) => {
+app.post("/", async (req, res) => {
   const { url } = req.body;
 
   if (!url || !isValidPixeldrainUrl(url)) {
@@ -50,7 +49,9 @@ router.post("/", async (req, res) => {
   }
 });
 
-app.use("/api", router);
+app.use(function (req, res, next) {
+  res.redirect("/");
+});
 
 module.exports = app;
 module.exports.handler = serverless(app);
