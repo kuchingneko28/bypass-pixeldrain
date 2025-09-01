@@ -54,19 +54,44 @@
             aria-label="Pixeldrain links"
           ></textarea>
 
-          <button
-            id="bypassBtn"
-            type="button"
-            class="flex items-center justify-center gap-2 w-full rounded-xl bg-sky-600 text-white px-4 py-2.5 font-semibold hover:bg-sky-700 active:scale-[.99] disabled:opacity-60 disabled:cursor-not-allowed"
-            disabled
-          >
-            <svg id="spinner" class="hidden h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" stroke-width="4" class="opacity-25" />
-              <path d="M4 12a8 8 0 0 1 8-8" stroke-width="4" class="opacity-75" />
-            </svg>
-            <span id="btnText">Bypass</span>
-            <i data-lucide="arrow-right-circle" class="h-5 w-5"></i>
-          </button>
+          <!-- 3-button toolbar: Paste • Bypass (center) • Clear -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+            <button
+              id="pasteBtn"
+              type="button"
+              class="flex items-center justify-center gap-2 w-full rounded-xl ring-1 ring-gray-300 dark:ring-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-[.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60"
+              title="Paste from clipboard"
+              aria-label="Paste from clipboard"
+            >
+              <i data-lucide="clipboard-paste" class="h-5 w-5"></i>
+              <span>Paste</span>
+            </button>
+
+            <button
+              id="bypassBtn"
+              type="button"
+              class="flex items-center justify-center gap-2 w-full rounded-xl bg-sky-600 text-white px-4 py-2.5 font-semibold hover:bg-sky-700 active:scale-[.99] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60"
+              disabled
+            >
+              <svg id="spinner" class="hidden h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke-width="4" class="opacity-25" />
+                <path d="M4 12a 8 8 0 0 1 8-8" stroke-width="4" class="opacity-75" />
+              </svg>
+              <span id="btnText">Bypass</span>
+              <i data-lucide="arrow-right-circle" class="h-5 w-5"></i>
+            </button>
+
+            <button
+              id="clearBtn"
+              type="button"
+              class="flex items-center justify-center gap-2 w-full rounded-xl ring-1 ring-gray-300 dark:ring-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-[.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60"
+              title="Clear input"
+              aria-label="Clear input"
+            >
+              <i data-lucide="trash-2" class="h-5 w-5"></i>
+              <span>Clear</span>
+            </button>
+          </div>
 
           <div id="messageBox" class="hidden mt-1 rounded-xl border px-4 py-3 text-sm" role="status" aria-live="polite"></div>
         </div>
@@ -114,6 +139,33 @@
         document.documentElement.classList.add("dark");
       }
 
+      async function handlePaste() {
+        try {
+          if (!navigator.clipboard || !navigator.clipboard.readText) {
+            setMessage("warning", "Clipboard API not available in this browser.");
+            return;
+          }
+          const text = await navigator.clipboard.readText();
+          if (!text) {
+            setMessage("warning", "Clipboard is empty.");
+            return;
+          }
+          const ta = $("#linkInput");
+          // Append with newline if textarea already has content
+          ta.value = ta.value ? ta.value.replace(/\s*$/, "\n") + text : text;
+          // Trigger input listeners
+          ta.dispatchEvent(new Event("input", { bubbles: true }));
+          setMessage("success", "Pasted from clipboard.");
+        } catch (e) {
+          setMessage("error", `Couldn't paste: ${e.message}`);
+        }
+      }
+
+      function handleClear() {
+        $("#linkInput").value = "";
+        toggleLoading(false);
+      }
+
       async function handleBypass() {
         const raw = $("#linkInput").value.trim();
         const links = raw
@@ -152,7 +204,7 @@
 
             if (viewer?.type === "list" && Array.isArray(viewer.api_response?.files)) {
               const { files, title } = viewer.api_response;
-              grid.insertAdjacentHTML("beforeend", `<div class="col-span-full"><h2 class="mb-2 text-lg font-semibold">${escapeHTML(title)}</h2></div>`);
+              grid.insertAdjacentHTML("beforeend", `<div class=\"col-span-full\"><h2 class=\"mb-2 text-lg font-semibold\">${escapeHTML(title)}</h2></div>`);
               for (const file of files) addFileCard(file);
               success++;
             } else if (viewer?.type === "file" && viewer.api_response?.id) {
@@ -182,20 +234,18 @@
         const sizeMB = (file.size / 1024 / 1024).toFixed(2);
         const id = encodeURIComponent(file.id);
         const name = escapeHTML(file.name);
-        const card = /* html */ `<article class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-4 shadow-sm">
-          <h3 class="truncate font-semibold" title="${name}">${name}</h3>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">${sizeMB} MB • ${file.views} views • ${file.downloads} downloads</p>
-          <a class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-700" href="https://pd.cybar.xyz/${id}" target="_blank" rel="noopener">
-            <i data-lucide="download" class="h-4 w-4"></i>
-            Download
-          </a>
-        </article>`;
+        const card = /* html */ `<article class=\"rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-4 shadow-sm\">
+          <h3 class=\"truncate font-semibold\" title=\"${name}\">${name}</h3>
+          <p class=\"mt-1 text-xs text-gray-500 dark:text-gray-400\">${sizeMB} MB • ${file.views} views • ${file.downloads} downloads</p>
+          <a class=\"mt-3 inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-700\" href=\"https://pd.cybar.xyz/${id}\" target=\"_blank\" rel=\"noopener\">\n            <i data-lucide=\"download\" class=\"h-4 w-4\"></i>\n            Download\n          </a>\n        </article>`;
         $("#bypassLink").insertAdjacentHTML("beforeend", card);
       }
 
       window.addEventListener("DOMContentLoaded", () => {
         lucide.createIcons();
         $("#bypassBtn").addEventListener("click", handleBypass);
+        $("#pasteBtn").addEventListener("click", handlePaste);
+        $("#clearBtn").addEventListener("click", handleClear);
         $("#themeToggle").addEventListener("click", () => {
           document.documentElement.classList.toggle("dark");
           localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
