@@ -74,8 +74,8 @@ async function fetchViewerData(url) {
           },
         };
       }
-    } catch {
-      // Try next base
+    } catch (err) {
+      console.log(err.message);
     }
   }
 

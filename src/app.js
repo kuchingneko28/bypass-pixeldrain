@@ -3,19 +3,15 @@ const cors = require("cors");
 const morgan = require("morgan");
 const path = require("path");
 const rateLimit = require("express-rate-limit");
-
 const { fetchViewerData, parsePixeldrainUrl } = require("./utils/pixeldrainUtils");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.set("trust proxy", 1);
-
 app.use(cors());
 app.use(express.json());
-app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+app.use(morgan("combined"));
 
-// rate limit basic POSTs
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 120,
@@ -52,5 +48,3 @@ app.use((req, res) => res.redirect("/"));
 app.listen(PORT, () => {
   console.log(`🚀 Listening on http://localhost:${PORT}`);
 });
-
-module.exports = app;
